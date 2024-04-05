@@ -4,7 +4,9 @@ import io.github.mattidragon.extendeddrawers.ExtendedDrawers;
 import io.github.mattidragon.extendeddrawers.block.DrawerBlock;
 import io.github.mattidragon.extendeddrawers.block.base.StorageDrawerBlock;
 import io.github.mattidragon.extendeddrawers.block.entity.DrawerBlockEntity;
+import io.github.mattidragon.extendeddrawers.registry.ModItems;
 import io.github.mattidragon.extendeddrawers.storage.DrawerSlot;
+import io.github.mattidragon.extendeddrawers.storage.DrawerStorage;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
@@ -73,8 +75,8 @@ public class DrawerBlockEntityRenderer extends AbstractDrawerBlockEntityRenderer
         var icons = new ArrayList<Sprite>();
         var config = ExtendedDrawers.CONFIG.get().client().icons();
         var blockAtlas = MinecraftClient.getInstance().getSpriteAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
-        
-        if (storage.isLocked()) icons.add(blockAtlas.apply(config.lockedIcon()));
+
+        if (storage.isLocked() && ShouldRenderLock(storage)) icons.add(blockAtlas.apply(config.lockedIcon()));
         if (storage.isVoiding()) icons.add(blockAtlas.apply(config.voidingIcon()));
         if (storage.isHidden()) icons.add(blockAtlas.apply(config.hiddenIcon()));
         if (storage.isDuping()) icons.add(blockAtlas.apply(config.dupingIcon()));
@@ -88,5 +90,20 @@ public class DrawerBlockEntityRenderer extends AbstractDrawerBlockEntityRenderer
             amount = "∞";
 
         renderSlot(storage.getResource(), amount, small, storage.isHidden(), icons, matrices, vertexConsumers, light, overlay, seed, pos, world);
+    }
+
+    private boolean ShouldRenderLock(DrawerStorage storage)
+    {
+        if (storage.getTrueAmount() <= 0) return true;
+        var clientPlayer = MinecraftClient.getInstance().player;
+        if (clientPlayer == null) return false;
+        for (var itemStack : clientPlayer.getHandItems())
+        {
+            if (itemStack.isOf(ModItems.LOCK))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
